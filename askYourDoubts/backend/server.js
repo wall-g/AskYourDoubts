@@ -5,6 +5,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const db = require('./db')
 const PORT = process.env.PORT || 80
+const router = require('./routers')
 
 //db connections
 db.connect()
@@ -22,6 +23,8 @@ app.use((req, res, next) => {
     next()
 })
 
+//api
+app.use('/api', router)
 
 app.use('/upload', express.static(path.join(__dirname, '/../uploads')))
 app.use(express.static(path.join(__dirname, "/../frontend/build")))
