@@ -1,9 +1,49 @@
-import React, {useRef} from 'react'
+import React, {useRef} from 'react';
+import { useSelector } from "react-redux";
+import { useState } from "react";
 import {TagsInput} from 'react-tag-input-component'
 import { Editor } from '@tinymce/tinymce-react';
 import ques from '../../resources/ques.svg'
+import { useNavigate } from "react-router-dom";
+import { selectUser } from "../../redux/features/userSlice"
+import axios from "axios";
+
 function Ask() {
   const editorRef = useRef(null);
+  const user = useSelector(selectUser);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [tag, setTag] = useState([]);
+  const history = useNavigate();
+
+  const handleEditor = (value) => {
+    if (editorRef.current) {
+      setBody(editorRef.current.getContent());
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (title !== "" && body !== "") {
+      const bodyJSON = {
+        title: title,
+        body: body,
+        tag: JSON.stringify(tag),
+        user: user,
+      };
+      await axios
+        .post("/api/question", bodyJSON)
+        .then((res) => {
+          alert("Question added successfully");
+          history.push("/");
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  };
+
   return (
     <div className='max-w-4xl mx-auto mt-10 font-body p-2'>
         <h2 className='text-txt text-2xl'>Ask a public question</h2>
@@ -11,10 +51,11 @@ function Ask() {
         <div className='bg-white px-4 py-4 shadow-md rounded'>
             <h3 className='text-sm font-semibold'>Title</h3>
             <p className='text-xs text-gry mt-1 mb-1'>Be specific and imagine you're asking a question to another person</p>
-            <input className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-1 px-2 text-sm mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"  type="sentence" placeholder="e.g. Is there an R function for finding the index of an element in a vector?"></input>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-1 px-2 text-sm mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"  type="text" placeholder="e.g. Is there an R function for finding the index of an element in a vector?"></input>
             <h3 className='text-sm font-semibold mt-4'>Body</h3>
             <p className='text-xs text-gry mt-1 mb-1'>Include all the information someone would need to answer your question</p>
             <Editor
+            onChange={handleEditor}
             apiKey='ewyywh62rqgkqrt4x7t0h4qg2cwru4o4yz3g63xiw8zk9cux'
             onInit={(evt, editor) => editorRef.current = editor}
             init={{
@@ -35,9 +76,9 @@ function Ask() {
           />
             <h3 className='text-sm font-semibold mt-4'>Tags</h3>
             <p className='text-xs text-gry mt-1 mb-1'>Add up to 5 tags to describe what your question is about</p>
-            <TagsInput name='tags' placeHolder='e.g. (asp.net ruby-on-rails vb)'/>
+            <TagsInput  value={tag} onChange={setTag}name='tags' placeHolder='e.g. (asp.net ruby-on-rails vb)'/>
         </div>  
-        <button className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-2 rounded mt-4 mb-6 text-sm">
+        <button onClick={handleSubmit} className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-2 rounded mt-4 mb-6 text-sm">
           Add your question
         </button>
     </div>
